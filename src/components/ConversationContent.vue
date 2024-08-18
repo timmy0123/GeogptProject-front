@@ -193,7 +193,8 @@ p {
 }
 
 .file {
-  max-width: 10%;
+  max-width: 30%;
+  overflow: hidden;
 }
 
 .folder {
