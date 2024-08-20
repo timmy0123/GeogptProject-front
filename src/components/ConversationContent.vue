@@ -135,38 +135,29 @@ watch(response, () => {
     const map = store.getters["conversations/getMap"];
     for (let i = 0; i < geodata.length; i++) {
       if (geodata[i].type === "Marker") {
-        let reverseLocation = [geodata[i].location[1], geodata[i].location[0]];
-        L.marker(reverseLocation)
+        L.marker(geodata[i].location)
           .bindPopup(
             `<h1>${geodata[i].name}</h1><br/><h2>${geodata[i].description}</h2>`
           )
           .openPopup()
           .addTo(map);
-        map.setView(reverseLocation, map.getZoom());
+        map.setView(geodata[i].location, map.getZoom());
       } else if (geodata[i].type === "Polygon") {
-        let reverseLocation = geodata[i].location.map((coord) => [
-          coord[1],
-          coord[0],
-        ]);
-        L.polygon(reverseLocation)
+        L.polygon(geodata[i].location)
           .bindPopup(
             `<h1>${geodata[i].name}</h1><br/><h2>${geodata[i].description}</h2>`
           )
           .openPopup()
           .addTo(map);
-        map.setView(reverseLocation[0], map.getZoom());
+        map.setView(geodata[i].location[0], map.getZoom());
       } else {
-        let reverseLocation = geodata[i].location.map((coord) => [
-          coord[1],
-          coord[0],
-        ]);
-        L.polyline(reverseLocation)
+        L.polyline(geodata[i].location)
           .bindPopup(
             `<h1>${geodata[i].name}</h1><br/><h2>${geodata[i].description}</h2>`
           )
           .openPopup()
           .addTo(map);
-        map.setView(reverseLocation[0], map.getZoom());
+        map.setView(geodata[i].location[0], map.getZoom());
       }
     }
   }

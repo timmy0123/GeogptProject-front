@@ -14,17 +14,12 @@ export default {
         `http://127.0.0.1:5000/chat?thread_id=${context.state.thread_id}&user_input=${chat}`,
         {
           method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": formData
-              ? "multipart/form-data"
-              : "application/json",
-          },
-          body: formData || null,
+          body: formData,
         }
       );
 
       if (!response.ok) {
+        console.error("Error:", response);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
