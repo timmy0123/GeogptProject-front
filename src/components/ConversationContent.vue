@@ -1,4 +1,9 @@
 <template>
+  <div class="spinner" v-if="isLoading">
+    <!-- Customize the spinner style as needed -->
+    <div class="double-bounce1"></div>
+    <div class="double-bounce2"></div>
+  </div>
   <div class="container conversation-content">
     <div class="dialogs" ref="dialogsContainer">
       <div v-for="(obj, index) in history" :key="index" class="dialog">
@@ -197,10 +202,6 @@ p {
   gap: 1rem;
 }
 
-.dialog {
-  margin-bottom: 2rem;
-}
-
 .dialog:last-child {
   margin-bottom: 5rem;
 }
@@ -300,12 +301,42 @@ p {
   align-items: center;
   justify-content: center;
 }
-</style>
 
-<!-- 
-import * as L from "leaflet";
-const map = store.getters["conversations/getMap"];
-L.marker([51.5, -0.09])
-  .addTo(map)
-  .bindPopup("A pretty CSS popup.<br> Easily customizable.")
-  .openPopup(); -->
+.spinner {
+  width: 100px;
+  height: 100px;
+  position: fixed;
+  z-index: 10000;
+  bottom: 0%;
+  left: 20%;
+  transform: translate(50%, 50%);
+  margin: 100px auto;
+}
+
+.double-bounce1,
+.double-bounce2 {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #757575;
+  opacity: 0.6;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+.double-bounce2 {
+  animation-delay: -1s;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+</style>

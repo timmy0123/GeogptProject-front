@@ -28,6 +28,7 @@ const props = defineProps({
   max-width: 80%;
   padding: 1rem;
   background-color: #343a40;
+  margin-bottom: 1rem;
 
   border-radius: 15px;
 
