@@ -1,11 +1,11 @@
 <template>
   <div class="container conversation-content">
-    <div class="dialogs">
+    <div class="dialogs" ref="dialogsContainer">
       <div v-for="(obj, index) in history" :key="index" class="dialog">
         <div v-for="(value, key) in obj" :key="key">
           <dialog-box :role="key">
             <template #default>
-              <p v-html="formatDialog(value)"></p>
+              <p v-html="formatDialog(value.messages[0])"></p>
             </template>
           </dialog-box>
         </div>
@@ -18,8 +18,9 @@
         @keydown="handleKeyDown"
         :rows="rows"
         v-model="inputValue"
+        :disabled="isLoading"
       ></textarea>
-      <div class="upload" @click="handleClick">
+      <div class="upload" @click="handleClick" :disabled="isLoading">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
           <g
@@ -39,22 +40,32 @@
         </svg>
       </div>
       <div class="file">
-        <input type="file" @change="onFileChanged($event)" accept="*" capture />
+        <input
+          type="file"
+          @change="onFileChanged($event)"
+          accept="*"
+          capture
+          :disabled="isLoading"
+        />
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useStore } from "vuex";
 import DialogBox from "./ui/DialogBox.vue";
+import * as L from "leaflet";
 
 let rows = ref(1);
 let inputValue = ref("");
+const dialogsContainer = ref(null);
 const store = useStore();
 const history = computed(
   () => store.getters["conversations/conversationHistory"]
 );
+const response = ref(0);
+const isLoading = ref(false);
 
 const formatDialog = (dialog) => dialog.replace(/\n/g, "<br>");
 
@@ -62,15 +73,18 @@ const onFileChanged = (event) => {
   store.dispatch("conversations/addFile", event.target.files[0]);
 };
 
-const handleClick = (e) => {
+const handleClick = async (e) => {
   if (inputValue.value.trim() === "") return;
-  store.commit("conversations/sendChat", inputValue.value);
+  isLoading.value = true;
+  await store.dispatch("conversations/sendChat", inputValue.value);
   rows.value = 1;
   e.target.value = "";
   inputValue.value = "";
+  response.value += 1;
+  isLoading.value = false;
 };
 
-const handleKeyDown = (e) => {
+const handleKeyDown = async (e) => {
   if (e.key === "Enter" && inputValue.value.trim() === "") {
     e.preventDefault();
     return;
@@ -95,12 +109,69 @@ const handleKeyDown = (e) => {
     rows.value--;
   } else if (e.key === "Enter") {
     e.preventDefault();
-    store.commit("conversations/sendChat", e.target.value);
+    isLoading.value = true;
+    await store.dispatch("conversations/sendChat", e.target.value);
     rows.value = 1;
     e.target.value = "";
     inputValue.value = "";
+    response.value += 1;
+    isLoading.value = false;
   }
 };
+
+watch(response, () => {
+  if (
+    history.value &&
+    history.value.length > 0 &&
+    history.value[history.value.length - 1].suggestion &&
+    history.value[history.value.length - 1].suggestion.geodata.length > 0
+  ) {
+    const geodata = history.value[history.value.length - 1].suggestion.geodata;
+    const map = store.getters["conversations/getMap"];
+    for (let i = 0; i < geodata.length; i++) {
+      if (geodata[i].type === "Marker") {
+        let reverseLocation = [geodata[i].location[1], geodata[i].location[0]];
+        L.marker(reverseLocation)
+          .bindPopup(
+            `<h1>${geodata[i].name}</h1><br/><h2>${geodata[i].description}</h2>`
+          )
+          .openPopup()
+          .addTo(map);
+        map.setView(reverseLocation, map.getZoom());
+      } else if (geodata[i].type === "Polygon") {
+        let reverseLocation = geodata[i].location.map((coord) => [
+          coord[1],
+          coord[0],
+        ]);
+        L.polygon(reverseLocation)
+          .bindPopup(
+            `<h1>${geodata[i].name}</h1><br/><h2>${geodata[i].description}</h2>`
+          )
+          .openPopup()
+          .addTo(map);
+        map.setView(reverseLocation[0], map.getZoom());
+      } else {
+        let reverseLocation = geodata[i].location.map((coord) => [
+          coord[1],
+          coord[0],
+        ]);
+        L.polyline(reverseLocation)
+          .bindPopup(
+            `<h1>${geodata[i].name}</h1><br/><h2>${geodata[i].description}</h2>`
+          )
+          .openPopup()
+          .addTo(map);
+        map.setView(reverseLocation[0], map.getZoom());
+      }
+    }
+  }
+  nextTick(() => {
+    dialogsContainer.value.scrollTo({
+      top: dialogsContainer.value.scrollHeight,
+      behavior: "smooth",
+    });
+  });
+});
 </script>
 
 <style scoped>
@@ -230,3 +301,11 @@ p {
   justify-content: center;
 }
 </style>
+
+<!-- 
+import * as L from "leaflet";
+const map = store.getters["conversations/getMap"];
+L.marker([51.5, -0.09])
+  .addTo(map)
+  .bindPopup("A pretty CSS popup.<br> Easily customizable.")
+  .openPopup(); -->

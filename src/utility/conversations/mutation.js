@@ -1,7 +1,6 @@
 export default {
-  sendChat(state, chat) {
-    state.history.push({ user: chat });
-    state.history.push({ system: "aaa" });
+  sendChat(state, dialog) {
+    state.history.push(dialog);
   },
 
   setMap(state, map) {
@@ -9,6 +8,6 @@ export default {
   },
 
   addFile(state, file) {
-    state.uploadedFile.push(file);
+    state.uploadedFile = file;
   },
 };
