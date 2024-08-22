@@ -18,16 +18,33 @@ L.Marker.prototype.options.icon = L.icon({
 });
 
 onMounted(() => {
-  const map = L.map("map").setView([51.505, -0.09], 13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 20,
-    attribution: "© OpenStreetMap",
-  }).addTo(map);
+  // Initialize the Leaflet map
+  const map = L.map("map").setView([23.5, 121], 7); // Centering on Taiwan
 
-  //   L.marker([51.5, -0.09])
-  //     .addTo(map)
-  //     .bindPopup("A pretty CSS popup.<br> Easily customizable.")
-  //     .openPopup();
+  // Define the base layer (OpenStreetMap)
+  const osmLayer = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }
+  ).addTo(map);
+
+  // Define the historical map layer
+  const layers = store.getters["maps/getLayers"];
+  let overlayMaps = {};
+  for (let i = 0; i < layers.length; i++) {
+    const layer = L.tileLayer(layers[i].url, { minZoom: 5, maxZoom: 16 });
+    overlayMaps[layers[i].name] = layer;
+  }
+
+  // Add layer control
+  const baseMaps = {
+    OpenStreetMap: osmLayer,
+  };
+
+  L.control.layers(baseMaps, overlayMaps).addTo(map);
 
   store.dispatch("conversations/setMap", map);
 });

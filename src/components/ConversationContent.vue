@@ -25,7 +25,7 @@
         v-model="inputValue"
         :disabled="isLoading"
       ></textarea>
-      <div class="upload" @click="handleClick" :disabled="isLoading">
+      <div class="upload" @click="handleClick">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
           <g
@@ -79,13 +79,14 @@ const onFileChanged = (event) => {
 };
 
 const handleClick = async (e) => {
-  if (inputValue.value.trim() === "") return;
+  if (inputValue.value.trim() === "" || isLoading.value) return;
   isLoading.value = true;
   await store.dispatch("conversations/sendChat", inputValue.value);
   rows.value = 1;
   e.target.value = "";
   inputValue.value = "";
   response.value += 1;
+  store.dispatch("conversations/addFile", null);
   isLoading.value = false;
 };
 
@@ -120,6 +121,7 @@ const handleKeyDown = async (e) => {
     e.target.value = "";
     inputValue.value = "";
     response.value += 1;
+    store.dispatch("conversations/addFile", null);
     isLoading.value = false;
   }
 };
@@ -199,7 +201,7 @@ p {
 .container.conversation-content {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   overflow-y: hidden;
   overflow-x: hidden;
   width: calc(40vw - 2rem);
